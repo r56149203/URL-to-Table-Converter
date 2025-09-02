@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Source Code to Table Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .input-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        
+        textarea, button {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        textarea {
+            min-height: 200px;
+            font-family: monospace;
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .results {
+            padding: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+        
+        h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .table-container {
+            overflow: auto;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        
+        th {
+            background-color: #3498db;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        tr:hover {
+            background-color: #e9f7fe;
+        }
+        
+        .question {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .correct {
+            background-color: #d4edda !important;
+            color: #155724;
+            font-weight: 600;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .instructions {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .instructions ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .results {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Source Code to Table Generator</h1>
+            <p class="description">Extract questions, options, and answers from HTML source code</p>
+        </header>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <label for="sourceCode">Paste your HTML source code:</label>
+                <textarea id="sourceCode" placeholder="Paste your HTML code here..."></textarea>
+            </div>
+            
+            <button id="processButton">Process Code</button>
+            
+            <div id="statusMessage" class="status"></div>
+        </div>
+        
+        <div class="results">
+            <div class="section">
+                <h2>Extracted Questions</h2>
+                <div class="table-container">
+                    <table id="resultTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Question</th>
+                                <th>Option A</th>
+                                <th>Option B</th>
+                                <th>Option C</th>
+                                <th>Option D</th>
+                                <th>Correct Answer</th>
+                                <th>Explanation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="8" style="text-align: center;">No data processed yet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Use:</h3>
+            <ul>
+                <li>Paste your HTML source code containing questions in the text area</li>
+                <li>Click "Process Code" to extract the questions, options, and answers</li>
+                <li>The results will be displayed in a table format</li>
+                <li>Correct answers will be highlighted in green</li>
+            </ul>
+            <p><strong>Note:</strong> This tool works best with HTML that follows a consistent structure like the example provided.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sourceCodeTextarea = document.getElementById('sourceCode');
+            const processButton = document.getElementById('processButton');
+            const resultTable = document.getElementById('resultTable');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            // Add example code to textarea
+            sourceCodeTextarea.value = `<div class="question-outer">
+                        <h3><a href="/gj/topic/reasoning/mcq/discussion/NDYwODc="> 2) જો STRANGE શબ્દના દરેક અક્ષરને મૂળાક્ષરોના ક્રમમાં ગોઠવવામાં આવે તો કેટલા અક્ષરોની સ્થિતિ યથાવત રહેશે?</a>  <span class="q-note"> (GPSC : Advt no: 71/2023-24 : Dt.02/06/2024)</span>  </h3>  
+                    
+    <div class="row" data-ans="D">  
+                 
+        <div class="col-md-6 col-sm-6 col-xs-6">
+                                    <label class="lbl-radio A_label">A) બે (Two)<span class="is-true A_option"></span>
+                            
+                <input type="radio" name="46087_question" value="A" class="ans-option">
+                <span class="checkmark"></span>
+            </label>
+        </div>
+        
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                            <label class="lbl-radio B_label">B) એક (One) <span class="is-true B_option"></span>
+                            <input type="radio" name="46087_question" value="B" class="ans-option">
+                <span class="checkmark"></span>
+            </label>
+        </div>
+        
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                            <label class="lbl-radio C_label">C) ત્રણ (Three) <span class="is-true C_option"></span>
+                    
+                <input type="radio" name="46087_question" value="C" class="ans-option">
+                <span class="checkmark"></span>
+            </label>
+        </div>
+        
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                            <label class="lbl-radio D_label">D) એક પણ નહીં (None) <span class="is-true D_option"></span>
+                    
+                <input type="radio" name="46087_question" value="D" class="ans-option">
+                <span class="checkmark"></span>
+            </label>
+        </div>
+        
+        
+        <div class="col-md-12 question-action-buttons">
+            <ul>
+                <li><a href="javascript:;" class="errorExplanation"><i class="fas fa-info-circle"></i><span class="desktop1">Answer</span></a></li>
+                                    <li><a href="/gj/topic/reasoning/mcq/discussion/NDYwODc="><i class="fas fa-comments"></i><span class="desktop1">Discuss</span></a></li>
+                                <li><a href="javascript:;" class="errorReports" data-toggle="modal" data-type="get" data-target="#errorReport" data-load-url="#" data-alert-title="Confirm" data-alert-type="delete" data-reload-url="#" data-post-type="question" data-qid="46087" data-alert-content="Suggestion Of - જો strange શબ્દના દરેક અક્ષરને મૂળાક્ષરોના ક્રમમાં ગોઠવવામાં આવે તો કેટલા અક્ષરોની સ્થિતિ યથાવત રહેશે?" data-question="જો strange શબ્દના દરેક અક્ષરને મૂળાક્ષરોના ક્રમમાં ગોઠવવામાં આવે તો કેટલા અક્ષરોની સ્થિતિ યથાવત રહેશે?"><i class="far fa-clipboard"></i><span class="desktop1">Suggestion</span></a></li>
+            </ul>
+            <div class="view-answer" id="">
+                                                    <p><strong>Answer Is:</strong> (D)  એક પણ નહીં (None)</p>
+                
+                <p><strong>Explanation:</strong><br><br>
+                        No answer description available for this question. 
+                                    <a href="/gj/topic/reasoning/mcq/discussion/NDYwODc=">Let us discuss.</a>
+                                
+</p>
+
+            </div>
+        </div> 
+    </div>
+</div>`;
+
+            // Process code when button is clicked
+            processButton.addEventListener('click', function() {
+                const sourceCode = sourceCodeTextarea.value.trim();
+                
+                if (!sourceCode) {
+                    showStatus('Please enter some HTML source code', 'error');
+                    return;
+                }
+                
+                // Show loading state
+                processButton.innerHTML = '<span class="loading"></span> Processing...';
+                processButton.disabled = true;
+                statusMessage.className = 'status';
+                
+                // Process after a short delay to show loading animation
+                setTimeout(() => {
+                    try {
+                        const questions = extractQuestions(sourceCode);
+                        displayQuestions(questions);
+                        showStatus(`Successfully extracted ${questions.length} question(s)`, 'success');
+                    } catch (error) {
+                        showStatus('Error processing code: ' + error.message, 'error');
+                        console.error('Error:', error);
+                    }
+                    
+                    // Reset button
+                    processButton.innerHTML = 'Process Code';
+                    processButton.disabled = false;
+                }, 500);
+            });
+            
+            function extractQuestions(html) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Find all question elements
+                const questionElements = doc.querySelectorAll('.question-outer');
+                const questions = [];
+                
+                questionElements.forEach((questionEl, index) => {
+                    try {
+                        // Extract question text
+                        const questionText = questionEl.querySelector('h3').textContent.replace(/\d+\)/, '').trim();
+                        
+                        // Extract options
+                        const options = {};
+                        const optionElements = questionEl.querySelectorAll('.lbl-radio');
+                        
+                        optionElements.forEach(optionEl => {
+                            const label = optionEl.textContent.trim();
+                            const value = optionEl.querySelector('input').value;
+                            options[value] = label;
+                        });
+                        
+                        // Extract correct answer
+                        const correctAnswer = questionEl.querySelector('.row').getAttribute('data-ans');
+                        
+                        // Extract explanation
+                        let explanation = '';
+                        const explanationEl = questionEl.querySelector('.view-answer');
+                        if (explanationEl) {
+                            explanation = explanationEl.textContent.replace('Answer Is:', '').trim();
+                        }
+                        
+                        questions.push({
+                            number: index + 1,
+                            question: questionText,
+                            options: options,
+                            correctAnswer: correctAnswer,
+                            explanation: explanation
+                        });
+                    } catch (error) {
+                        console.error('Error parsing question:', error);
+                    }
+                });
+                
+                return questions;
+            }
+            
+            function displayQuestions(questions) {
+                const tbody = resultTable.querySelector('tbody');
+                tbody.innerHTML = '';
+                
+                if (questions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No questions found in the source code</td></tr>';
+                    return;
+                }
+                
+                questions.forEach(q => {
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td>${q.number}</td>
+                        <td class="question">${q.question}</td>
+                        <td class="${q.correctAnswer === 'A' ? 'correct' : ''}">${q.options.A || ''}</td>
+                        <td class="${q.correctAnswer === 'B' ? 'correct' : ''}">${q.options.B || ''}</td>
+                        <td class="${q.correctAnswer === 'C' ? 'correct' : ''}">${q.options.C || ''}</td>
+                        <td class="${q.correctAnswer === 'D' ? 'correct' : ''}">${q.options.D || ''}</td>
+                        <td>${q.correctAnswer}</td>
+                        <td>${q.explanation}</td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            }
+            
+            function showStatus(message, type) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'status ' + type;
+            }
+        });
+    </script>
+</body>
+</html>
